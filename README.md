@@ -1,6 +1,7 @@
 # Arch Linux Multi-version Python Repository
 
 Available  Python versions:
+  - 3.5 (`python35`)
   - 3.6 (`python36`)
   - 3.7 (`python37`)
 
