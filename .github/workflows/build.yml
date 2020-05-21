@@ -64,13 +64,13 @@ jobs:
         run: |
           rm -f "$GITHUB_WORKSPACE"/repo/*.pkg.*
 
-      - name: Fetch Python release PGP keys
-        run: gpg --recv-keys 0D96DF4D4110E5C43FBFB17F2D347EA6AA65421D
+      #- name: Fetch Python release PGP keys
+      #  run: gpg --recv-keys 0D96DF4D4110E5C43FBFB17F2D347EA6AA65421D
 
       - name: Build python37
         run: |
           cd "$GITHUB_WORKSPACE"/master/python37
-          extra-x86_64-build -- -U user
+          extra-x86_64-build -- -U user -- --skippgpcheck
 
       - name: Generate repo database
         run: |
