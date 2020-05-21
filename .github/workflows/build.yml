@@ -1,0 +1,99 @@
+name: build
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    container:
+      image: archlinux
+      options: --privileged
+      volumes:
+        - /sys/fs/cgroup:/sys/fs/cgroup
+    steps:
+      - name: Get date
+        id: date
+        run: echo "::set-output name=date::$(date +%F)"
+
+      - name: Cache
+        uses: actions/cache@v1
+        with:
+          path: /var/cache/pacman/pkg
+          key: arch-pkgs-${{ steps.date.outputs.date }}
+          restore-keys: arch-pkgs
+
+      - name: Update system and install dependencies
+        run: pacman -Syu --noconfirm --noprogressbar --needed base-devel devtools btrfs-progs dbus sudo git
+
+      - name: Checkout master
+        uses: actions/checkout@v2
+        with:
+          path: master
+
+      - name: Checkout repo
+        run: git clone --branch gh-pages https://github.com/${{ github.repository }}.git repo
+
+      - name: Populate /etc/machine-id
+        run: dbus-uuidgen --ensure=/etc/machine-id
+
+      - name: Setup git
+        run: |
+          git config --global user.email actions@github.com
+          git config --global user.name 'Github Actions'
+          git config --global core.editor true
+
+      - name: Setup mkepkg configuration
+        run: |
+          mkdir -p "$HOME"/{sources,srcpackages,makepkglogs}
+          sed -i -e "s|MAKEFLAGS=.*|MAKEFLAGS=-j$(nproc)|" \
+                 -e "s|#PKGDEST=.*|PKGDEST='$GITHUB_WORKSPACE/repo'|" \
+                 -e "s|#SRCDEST=.*|SRCDEST='$HOME/sources'|" \
+                 -e "s|#SRCPKGDEST=.*|SRCPKGDEST='$HOME/srcpackages'|" \
+                 -e "s|#LOGDEST=.*|LOGDEST='$HOME/makepkglogs'|" \
+                 -e 's|!ccache|ccache|' \
+                 /etc/makepkg.conf
+
+      - name: Setup build user
+        run: |
+          useradd -m user
+          chown -R user "$HOME" "$GITHUB_WORKSPACE"
+
+      - name: Remove existing packages
+        run: |
+          rm -f "$GITHUB_WORKSPACE"/repo/*.pkg.*
+
+      - name: Fetch Python release PGP keys
+        run: gpg --recv-keys 0D96DF4D4110E5C43FBFB17F2D347EA6AA65421D
+
+      - name: Build python37
+        run: |
+          cd "$GITHUB_WORKSPACE"/master/python37
+          extra-x86_64-build -- -U user
+
+      - name: Generate repo database
+        run: |
+          cd "$GITHUB_WORKSPACE"/repo
+          repo-add python.db.tar.gz *.pkg.*
+          rm -f *.old
+
+      - name: Generate index.html for repo
+        run: |
+          "$GITHUB_WORKSPACE"/master/generate-index.sh "$GITHUB_WORKSPACE"/repo
+
+      - name: Commit packages
+        run: |
+          cd "$GITHUB_WORKSPACE"/repo
+          git add -u
+          git add *
+          git commit --fixup HEAD || true
+          git rebase -i --autosquash --root
+
+      - name: Push changes
+        uses: ad-m/github-push-action@master
+        with:
+          github_token: ${{ secrets.ACCESS_TOKEN }}
+          branch: gh-pages
+          directory: repo
+          force: true
