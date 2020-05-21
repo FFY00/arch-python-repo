@@ -58,7 +58,6 @@ build() {
               --enable-shared \
               --with-threads \
               --with-computed-gotos \
-              --enable-optimizations \
               --with-lto \
               --enable-ipv6 \
               --with-system-expat \
@@ -67,6 +66,8 @@ build() {
               --with-system-libmpdec \
               --enable-loadable-sqlite-extensions \
               --without-ensurepip
+
+#              --enable-optimizations \
 
   # Obtain next free server number for xvfb-run; this even works in a chroot environment.
   export servernum=99
