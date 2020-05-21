@@ -12,6 +12,10 @@ jobs:
       options: --privileged
       volumes:
         - /sys/fs/cgroup:/sys/fs/cgroup
+    strategy:
+      matrix:
+        python: [37]
+      max-parallel: 1
     steps:
       - name: Get date
         id: date
@@ -32,19 +36,34 @@ jobs:
         with:
           path: master
 
+      - name: Check for source changes
+        id: check
+        env:
+          PREVIOUS: ${{ github.event.before }}
+          CURRENT: ${{ github.sha }}
+          PY_VER: ${{ matrix.python }}
+        run: |
+          cd "$GITHUB_WORKSPACE"/master
+          git fetch origin $PREVIOUS
+          git diff --name-only $PREVIOUS $CURRENT | grep -q python$PY_VER && echo '::set-output name=run::true' || true
+
       - name: Checkout repo
+        if: steps.check.outputs.run == 'true'
         run: git clone --branch gh-pages https://github.com/${{ github.repository }}.git repo
 
       - name: Populate /etc/machine-id
+        if: steps.check.outputs.run == 'true'
         run: dbus-uuidgen --ensure=/etc/machine-id
 
       - name: Setup git
+        if: steps.check.outputs.run == 'true'
         run: |
           git config --global user.email actions@github.com
           git config --global user.name 'Github Actions'
           git config --global core.editor true
 
       - name: Setup mkepkg configuration
+        if: steps.check.outputs.run == 'true'
         run: |
           mkdir -p "$HOME"/{sources,srcpackages,makepkglogs}
           sed -i -e "s|MAKEFLAGS=.*|MAKEFLAGS=-j$(nproc)|" \
@@ -56,33 +75,46 @@ jobs:
                  /etc/makepkg.conf
 
       - name: Setup build user
+        if: steps.check.outputs.run == 'true'
         run: |
           useradd -m user
           chown -R user "$HOME" "$GITHUB_WORKSPACE"
 
       - name: Remove existing packages
+        if: steps.check.outputs.run == 'true'
+        env:
+          PY_VER: ${{ matrix.python }}
         run: |
-          rm -f "$GITHUB_WORKSPACE"/repo/*.pkg.*
+          rm -f "$GITHUB_WORKSPACE"/repo/python$PY_VER*.pkg.*
 
       #- name: Fetch Python release PGP keys
+      #  if: steps.check.outputs.run == 'true'
       #  run: gpg --recv-keys 0D96DF4D4110E5C43FBFB17F2D347EA6AA65421D
 
-      - name: Build python37
+      - name: Build package
+        if: steps.check.outputs.run == 'true'
+        env:
+          PY_VER: ${{ matrix.python }}
         run: |
-          cd "$GITHUB_WORKSPACE"/master/python37
+          cd "$GITHUB_WORKSPACE"/master/python$PY_VER
           extra-x86_64-build -- -U user -- --skippgpcheck
 
       - name: Generate repo database
+        if: steps.check.outputs.run == 'true'
+        env:
+          PY_VER: ${{ matrix.python }}
         run: |
           cd "$GITHUB_WORKSPACE"/repo
-          repo-add python.db.tar.gz *.pkg.*
+          repo-add python.db.tar.gz python$PY_VER*.pkg.*
           rm -f *.old
 
       - name: Generate index.html for repo
+        if: steps.check.outputs.run == 'true'
         run: |
           "$GITHUB_WORKSPACE"/master/generate-index.sh "$GITHUB_WORKSPACE"/repo
 
       - name: Commit packages
+        if: steps.check.outputs.run == 'true'
         run: |
           cd "$GITHUB_WORKSPACE"/repo
           git add -u
@@ -91,6 +123,7 @@ jobs:
           git rebase -i --autosquash --root
 
       - name: Push changes
+        if: steps.check.outputs.run == 'true'
         uses: ad-m/github-push-action@master
         with:
           github_token: ${{ secrets.ACCESS_TOKEN }}
