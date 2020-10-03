@@ -6,7 +6,7 @@
 
 _py_ver=35
 pkgname=python$_py_ver
-pkgver=3.5.9
+pkgver=3.5.10
 pkgrel=1
 _pybasever=${pkgver%.*}
 pkgdesc='Next generation of the python high-level scripting language'
@@ -24,7 +24,7 @@ optdepends=('python-setuptools'
 provides=('python3')
 replaces=('python3')
 source=("https://www.python.org/ftp/python/${pkgver%rc*}/Python-$pkgver.tar.xz"{,.asc})
-sha512sums=('58127793adef42ed57ae4d56338268866e14c2d084f09f57f26fc6b1c9454e70cc6d3dffc638f8d56f182acc0884021a4dbb578f312dd6fc01995fa85e31377e'
+sha512sums=('a3f584b1da8889ad72665ba8863dfb73c800720efa67ea29315c4cafa92eacf5f4313ffa59fe3b19ed614770dbcb0e5710db9bc30e216d3edaa9a07ca156182e'
             'SKIP')
 validpgpkeys=('97FC712E4C024BBEA48A61ED3A5CA953F73C700D') # Larry Hastings <larry@hastings.org>
 
