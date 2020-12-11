@@ -4,6 +4,7 @@ Available  Python versions:
   - 3.5 (`python35`)
   - 3.6 (`python36`)
   - 3.7 (`python37`)
+  - 3.8 (`python38`)
 
 ###### Note: This repo is meant to complete the official Arch Linux repos. We commit to providing all active Python releases, the missing versions here should be available in the official Arch Linux repos. Inactive releases could still be provided at our sole discretion.
 
@@ -24,7 +25,8 @@ Server = https://ffy00.github.io/arch-python-repo/
 | 3.5     | Active   | *2020-09-13 **(ended)*** | [`python`] (this)      | `python35` |
 | 3.6     | Active   | 2021-12-23               | [`python`] (this)      | `python36` |
 | 3.7     | Active   | 2023-06-27               | [`python`] (this)      | `python37` |
-| 3.8     | Active   | 2024-10                  | [`extra`] (Arch Linux) | `python`   |
+| 3.8     | Active   | 2024-10                  | [`python`] (this)      | `python38` |
+| 3.9     | Active   | 2025-10                  | [`extra`] (Arch Linux) | `python`   |
 
 [`extra`]: https://www.archlinux.org/packages/?repo=Extra
 [`python`]: https://github.com/FFY00/arch-python-repo
