@@ -7,7 +7,7 @@
 _py_ver=38
 pkgname=python$_py_ver
 pkgver=3.8.6
-pkgrel=2
+pkgrel=3
 _pybasever=${pkgver%.*}
 pkgdesc='Next generation of the python high-level scripting language'
 arch=('x86_64')
@@ -122,7 +122,7 @@ package() {
   rm -f "$pkgdir"/usr/bin/python{,3}
   rm -f "$pkgdir"/usr/bin/python{,3}-config
   rm -f "$pkgdir"/usr/lib/libpython3.so
-  rm -f "$pkgdir"/usr/lib/pkgconfig/python3.pc
+  rm -f "$pkgdir"/usr/lib/pkgconfig/python3{,-embed}.pc
   rm -f "$pkgdir"/usr/share/man/man1/python3.1
 
   # License
