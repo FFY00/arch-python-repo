@@ -18,7 +18,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python: [35, 36, 37]
+        python: [35, 36, 37, 38]
       max-parallel: 1
     steps:
       - name: Get date
