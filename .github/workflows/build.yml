@@ -2,10 +2,10 @@ name: build
 on:
   push:
     branches:
-      - master
+      - main
   pull_request:
     branches:
-      - master
+      - main
 
 jobs:
   build:
@@ -35,10 +35,10 @@ jobs:
       - name: Update system and install dependencies
         run: pacman -Syu --noconfirm --noprogressbar --needed base-devel devtools btrfs-progs dbus sudo git
 
-      - name: Checkout master
+      - name: Checkout main
         uses: actions/checkout@v2
         with:
-          path: master
+          path: main
 
       - name: Check for source changes
         id: check
@@ -47,7 +47,7 @@ jobs:
           CURRENT: ${{ github.sha }}
           PY_VER: ${{ matrix.python }}
         run: |
-          cd "$GITHUB_WORKSPACE"/master
+          cd "$GITHUB_WORKSPACE"/main
           git fetch origin $PREVIOUS
           git diff --name-only $PREVIOUS $CURRENT | grep -q python$PY_VER && echo '::set-output name=run::true' || true
 
@@ -100,7 +100,7 @@ jobs:
         env:
           PY_VER: ${{ matrix.python }}
         run: |
-          cd "$GITHUB_WORKSPACE"/master/python$PY_VER
+          cd "$GITHUB_WORKSPACE"/main/python$PY_VER
           extra-x86_64-build -- -U user -- --skippgpcheck
 
       - name: Generate repo database
@@ -115,7 +115,7 @@ jobs:
       - name: Generate index.html for repo
         if: steps.check.outputs.run == 'true'
         run: |
-          "$GITHUB_WORKSPACE"/master/generate-index.sh "$GITHUB_WORKSPACE"/repo
+          "$GITHUB_WORKSPACE"/main/generate-index.sh "$GITHUB_WORKSPACE"/repo
 
       - name: Commit packages
         if: steps.check.outputs.run == 'true'
