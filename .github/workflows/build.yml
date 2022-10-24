@@ -1,5 +1,6 @@
 name: build
 on:
+  workflow_dispatch:
   push:
     branches:
       - main
@@ -26,7 +27,7 @@ jobs:
         run: echo "::set-output name=date::$(date +%F)"
 
       - name: Cache
-        uses: actions/cache@v1
+        uses: actions/cache@v3
         with:
           path: /var/cache/pacman/pkg
           key: arch-pkgs-${{ steps.date.outputs.date }}
@@ -36,7 +37,7 @@ jobs:
         run: pacman -Syu --noconfirm --noprogressbar --needed base-devel devtools btrfs-progs dbus sudo git
 
       - name: Checkout main
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           path: main
 
