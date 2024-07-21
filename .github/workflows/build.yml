@@ -91,17 +91,11 @@ jobs:
         run: |
           rm -f "$GITHUB_WORKSPACE"/repo/python$PY_VER*.pkg.*
 
-      #- name: Fetch Python release PGP keys
-      #  if: steps.check.outputs.run == 'true'
-      #  run: gpg --recv-keys 0D96DF4D4110E5C43FBFB17F2D347EA6AA65421D
-
-      - name: Build package
+      - name: Build Arch Linux package
         if: steps.check.outputs.run == 'true'
-        env:
-          PY_VER: ${{ matrix.python }}
-        run: |
-          cd "$GITHUB_WORKSPACE"/main/python$PY_VER
-          extra-x86_64-build -- -U user -- --skippgpcheck
+        uses: FFY00/build-arch-package@v1
+        with:
+          PKGBUILD: main/python$PY_VER/PKGBUILD
 
       - name: Generate repo database
         if: steps.check.outputs.run == 'true'
@@ -109,7 +103,7 @@ jobs:
           PY_VER: ${{ matrix.python }}
         run: |
           cd "$GITHUB_WORKSPACE"/repo
-          repo-add python.db.tar.gz python$PY_VER*.pkg.*
+          repo-add python.db.tar.gz "$HOME"/arch-packages/python$PY_VER*.pkg.*
           rm -f *.old
 
       - name: Generate index.html for repo
