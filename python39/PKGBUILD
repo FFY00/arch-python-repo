@@ -6,8 +6,8 @@
 
 _py_ver=39
 pkgname=python$_py_ver
-pkgver=3.9.9
-pkgrel=2
+pkgver=3.9.19
+pkgrel=1
 _pybasever=${pkgver%.*}
 pkgdesc='Next generation of the python high-level scripting language'
 arch=('x86_64')
@@ -24,7 +24,7 @@ optdepends=('python-setuptools'
 provides=('python3')
 replaces=('python3')
 source=("https://www.python.org/ftp/python/${pkgver%rc*}/Python-$pkgver.tar.xz"{,.asc})
-sha512sums=('0ab29fb9a7ecb808bd08d84d28908d5a934e0f021853da0f7a9c94670eb30c8dbbc233d461afdb3995b0de59275ef7e1de43e82d7f848802cbd6e6e50b7b25a6'
+sha512sums=('5577830c734e63a70bbc62cd33d263b9aa87c4381b49cb694c3559067c4c682a55506b65ec5514a8e0a5abf6294dc728e909385d449ae1c388e62f83cea9bb89'
             'SKIP')
 validpgpkeys=('0D96DF4D4110E5C43FBFB17F2D347EA6AA65421D'   # Ned Deily (Python release signing key) <nad@python.org>
               'E3FF2839C048B25C084DEBE9B26995E310250568')  # Łukasz Langa (GPG langa.pl) <lukasz@langa.pl>
