@@ -25,12 +25,19 @@ jobs:
         id: date
         run: echo "::set-output name=date::$(date +%F)"
 
-      - name: Cache
+      - name: Cache pacman packages
         uses: actions/cache@v1
         with:
           path: /var/cache/pacman/pkg
           key: arch-pkgs-${{ steps.date.outputs.date }}
           restore-keys: arch-pkgs
+
+      - name: Cache archbuild
+        uses: actions/cache@v1
+        with:
+          path: /var/lib/archbuild
+          key: archbuild-${{ steps.date.outputs.date }}
+          restore-keys: archbuild
 
       - name: Checkout main
         uses: actions/checkout@v2
