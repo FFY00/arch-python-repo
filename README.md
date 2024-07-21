@@ -6,6 +6,7 @@ Available  Python versions:
   - 3.7 (`python37`)
   - 3.8 (`python38`)
   - 3.9 (`python39`)
+  - 3.10 (`python310`)
 
 ###### Note: This repo is meant to complete the official Arch Linux repos. We commit to providing all active Python releases, the missing versions here should be available in the official Arch Linux repos. Inactive releases could still be provided at our sole discretion.
 

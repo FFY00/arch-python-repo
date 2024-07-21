@@ -1,0 +1,127 @@
+# Maintainer: Angel Velasquez <angvp@archlinux.org>
+# Maintainer: Felix Yan <felixonmars@archlinux.org>
+# Contributor: Stéphane Gaudreault <stephane@archlinux.org>
+# Contributor: Allan McRae <allan@archlinux.org>
+# Contributor: Jason Chu <jason@archlinux.org>
+
+_py_ver=310
+pkgname=python$_py_ver
+pkgver=3.10.14
+pkgrel=1
+_pybasever=${pkgver%.*}
+pkgdesc='Next generation of the python high-level scripting language'
+arch=('x86_64')
+license=('custom')
+url='https://www.python.org/'
+depends=('expat' 'bzip2' 'gdbm' 'openssl' 'libffi' 'zlib' 'libnsl')
+makedepends=('tk' 'sqlite' 'valgrind' 'bluez-libs' 'mpdecimal' 'llvm' 'gdb' 'xorg-server-xvfb')
+optdepends=('python-setuptools'
+            'python-pip'
+            'sqlite'
+            'mpdecimal: for decimal'
+            'xz: for lzma'
+            'tk: for tkinter')
+provides=('python3')
+replaces=('python3')
+source=("https://www.python.org/ftp/python/${pkgver%rc*}/Python-$pkgver.tar.xz"{,.asc})
+sha512sums=('adee638aeca898743da4b8245c0fa1e9b94b516f22e716e60c99038f0bb3dcbf726317aa86656404be1719b5a7c58eb09533720ebc0badbb04bd9a534dd48fef'
+            'SKIP')
+validpgpkeys=('A035C8C19219BA821ECEA86B64E628F8D684696D')   # Pablo Galindo Salgado <pablogsal@gmail.com>
+
+prepare() {
+  cd Python-$pkgver
+
+  # https://bugs.python.org/issue34587
+  sed -i -e 's|testCongestion|disabled_&|' Lib/test/test_socket.py
+
+  # FS#23997
+  sed -i -e 's|^#.* /usr/local/bin/python|#!/usr/bin/python|' Lib/cgi.py
+
+  # Speed up LTO
+  sed -i -e 's|-flto |-flto=4 |g' configure configure.ac
+
+  # Ensure that we are using the system copy of various libraries (expat, libffi, and libmpdec),
+  # rather than copies shipped in the tarball
+  rm -r Modules/expat
+  rm -r Modules/_ctypes/{darwin,libffi}*
+  rm -r Modules/_decimal/libmpdec
+}
+
+build() {
+  cd Python-$pkgver
+
+  # PGO should be done with -O3
+  # Also included the -fno-semantic-interposition optimization:
+  # https://fedoraproject.org/wiki/Changes/PythonNoSemanticInterpositionSpeedup
+  CFLAGS="${CFLAGS/-O2/-O3} -fno-semantic-interposition"
+  LDFLAGS="$LDFLAGS -fno-semantic-interposition"
+
+  # Disable bundled pip & setuptools
+  ./configure --prefix=/usr \
+              -enable-shared \
+              --with-computed-gotos \
+              --with-lto \
+              --enable-ipv6 \
+              --with-system-expat \
+              --with-dbmliborder=gdbm:ndbm \
+              --with-system-ffi \
+              --with-system-libmpdec \
+              --enable-loadable-sqlite-extensions \
+              --without-ensurepip \
+              --with-tzpath=/usr/share/zoneinfo \
+              ax_cv_c_float_words_bigendian=no
+
+#              --enable-optimizations \
+
+  # Obtain next free server number for xvfb-run; this even works in a chroot environment.
+  export servernum=99
+  while ! xvfb-run -a -n "$servernum" /bin/true 2>/dev/null; do servernum=$((servernum+1)); done
+
+  LC_CTYPE=en_US.UTF-8 xvfb-run -s '-screen 0 1280x720x24 -ac +extension GLX' -a -n "$servernum" make EXTRA_CFLAGS="$CFLAGS"
+}
+
+
+#check() {
+#  # test_tk and test_ttk_guionly: https://bugs.python.org/issue43139
+#
+#  cd Python-${pkgver}
+#
+#  # Obtain next free server number for xvfb-run; this even works in a chroot environment.
+#  export servernum=99
+#  while ! xvfb-run -a -n "$servernum" /bin/true 2>/dev/null; do servernum=$((servernum+1)); done
+#
+#  LD_LIBRARY_PATH="${srcdir}/Python-${pkgver}":${LD_LIBRARY_PATH} \
+#  LC_CTYPE=en_US.UTF-8 xvfb-run -s "-screen 0 1920x1080x16 -ac +extension GLX" -a -n "$servernum" \
+#    "${srcdir}/Python-${pkgver}/python" -m test.regrtest -v -uall -x test_tk -x test_ttk_guionly
+#}
+
+package() {
+  cd Python-${pkgver}
+
+  # Hack to avoid building again
+  sed -i 's/^all:.*$/all: build_all/' Makefile
+
+  # PGO should be done with -O3
+  CFLAGS="${CFLAGS/-O2/-O3}"
+
+  make DESTDIR="$pkgdir" EXTRA_CFLAGS="$CFLAGS" install
+
+  # some useful "stuff" FS#46146
+  install -dm 755 "$pkgdir"/usr/lib/python$_pybasever/Tools/{i18n,scripts}
+  install -m 755 Tools/i18n/{msgfmt,pygettext}.py "$pkgdir"/usr/lib/python$_pybasever/Tools/i18n/
+  install -m 755 Tools/scripts/{README,*py} "$pkgdir"/usr/lib/python$_pybasever/Tools/scripts/
+
+  # fix conflicts with python
+  rm -f "$pkgdir"/usr/bin/pyvenv{,3}
+  rm -f "$pkgdir"/usr/bin/2to3{,3}
+  rm -f "$pkgdir"/usr/bin/idle{,3}
+  rm -f "$pkgdir"/usr/bin/pydoc{,3}
+  rm -f "$pkgdir"/usr/bin/python{,3}
+  rm -f "$pkgdir"/usr/bin/python{,3}-config
+  rm -f "$pkgdir"/usr/lib/libpython3.so
+  rm -f "$pkgdir"/usr/lib/pkgconfig/python3{,-embed}.pc
+  rm -f "$pkgdir"/usr/share/man/man1/python3.1
+
+  # License
+  install -Dm 644 LICENSE "$pkgdir"/usr/share/licenses/$pkgname/LICENSE
+}
