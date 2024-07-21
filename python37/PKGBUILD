@@ -6,7 +6,7 @@
 
 _py_ver=37
 pkgname=python$_py_ver
-pkgver=3.7.9
+pkgver=3.7.17
 pkgrel=1
 _pybasever=${pkgver%.*}
 pkgdesc='Next generation of the python high-level scripting language'
@@ -24,7 +24,7 @@ optdepends=('python-setuptools'
 provides=('python3')
 replaces=('python3')
 source=("https://www.python.org/ftp/python/${pkgver%rc*}/Python-$pkgver.tar.xz"{,.asc})
-sha512sums=('e4217b25529b5336e43b63d17f3758a8177a58184564cf02bd92a312f58dba9e096485c9e3cb3544f966e847ea15b3ab30ed065d28a6ca52a6d7e0faddf7d9f9'
+sha512sums=('86ba1c953e7b4bce70445d1616cc0d428b50937f6a874811584df8bf23c3e2ba3e5d48dec00e629a47f4216f3ca50dc5389cd485fbc315f51000d8750403b5f0'
             'SKIP')
 validpgpkeys=('0D96DF4D4110E5C43FBFB17F2D347EA6AA65421D')  # Ned Deily (Python release signing key) <nad@python.org>
 
