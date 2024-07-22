@@ -1,7 +1,38 @@
 #!/bin/sh
 
-packages=*/*.pkg.tar.zst
-package_names=$(echo $packages | xargs -n1 basename)
+MAGENTA='\e[35m'
+BOLD='\e[1m'
+RESET='\e[0m'
 
-rsync -a --progress $packages homedir:public_html/python-repo
-ssh homedir cd public_html/python-repo \&\& repo-add -p -n -R python.db.tar.gz $package_names
+msg() {
+  echo -e "$MAGENTA$BOLD$@$RESET"
+}
+
+sync() {
+  rsync -a --delete --progress $@
+}
+
+msg 'Syncing local repo with remote...'
+sync homedir:public_html/python-repo/ repo/
+
+msg 'Copying packages to repo...'
+sync */*.pkg.tar.zst repo/
+
+msg 'Signing packages...'
+for file in repo/*.pkg.tar.zst; do
+  gpg --batch --detach-sign --no-armor --output $file.sig $file 2>/dev/null
+  echo "Signed $file."
+done
+
+msg 'Updating repo...'
+repo-add \
+  --new \
+  --remove \
+  --prevent-downgrade \
+  --include-sigs \
+  --sign \
+  repo/python.db.tar.gz */*.pkg.tar.zst
+rm -rf repo/*.old
+
+msg 'Syncing remote repo with local...'
+sync repo/ homedir:public_html/python-repo/
