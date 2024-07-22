@@ -41,7 +41,7 @@ repo-add \
   --include-sigs \
   --sign \
   repo/python.db.tar.gz */*.pkg.tar.zst
-rm -rf repo/*.old
+rm -rf repo/*.old{,.sig}
 
 msg 'Syncing remote repo with local...'
 sync repo/ homedir:public_html/python-repo/
