@@ -14,12 +14,24 @@ Available  Python versions:
 
 ### Configuration
 
+###### The old repo (hosted via Github Pages) is broken (see [#13]), so I am temporarily hosting the repo on pkgbuild.com.
+
 Add a repo entry in your `/etc/pacman.conf`:
 ```ini
 [python]
-SigLevel = Optional
-Server = https://ffy00.github.io/arch-python-repo/
+Server = https://pkgbuild.com/~ffy00/python-repo/
 ```
+
+<details>
+  <summary>Old repo</summary>
+
+  Add a repo entry in your `/etc/pacman.conf`:
+  ```ini
+  [python]
+  SigLevel = Optional
+  Server = https://ffy00.github.io/arch-python-repo/
+  ```
+</details>
 
 ### Version table (w/ distribution per repository)
 
@@ -33,5 +45,6 @@ Server = https://ffy00.github.io/arch-python-repo/
 | 3.9     | Bugfix          | 2025-10      | [`python`] (this)      | `python39` |
 | 3.10    | Bugfix          | 2026-10      | [`extra`] (Arch Linux) | `python`   |
 
+[#13]: https://github.com/FFY00/arch-python-repo/issues/13
 [`extra`]: https://www.archlinux.org/packages/?repo=Extra
 [`python`]: https://github.com/FFY00/arch-python-repo
