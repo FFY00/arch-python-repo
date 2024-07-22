@@ -26,7 +26,8 @@ replaces=('python3')
 source=("https://www.python.org/ftp/python/${pkgver%rc*}/Python-$pkgver.tar.xz"{,.asc})
 sha512sums=('d5d27d68049b61f135e21b12a800dbd4fc521d6935de178de6e2e88a989cda511d3c8fead90d14e38d2db0e528a74b22674e0da01c51ff4fad7d335ec6c3dbbc'
             'SKIP')
-validpgpkeys=('0D96DF4D4110E5C43FBFB17F2D347EA6AA65421D')  # Ned Deily (Python release signing key) <nad@python.org>
+validpgpkeys=('0D96DF4D4110E5C43FBFB17F2D347EA6AA65421D'  # Ned Deily (Python release signing key) <nad@python.org>
+              '97FC712E4C024BBEA48A61ED3A5CA953F73C700D') # Larry Hastings <larry@hastings.org>
 
 prepare() {
   cd Python-$pkgver
@@ -108,22 +109,23 @@ package() {
 
   make DESTDIR="$pkgdir" EXTRA_CFLAGS="$CFLAGS" install
 
-  # Why are these not done by default...
-  ln -s python3             "$pkgdir"/usr/bin/python
-  ln -s python3-config      "$pkgdir"/usr/bin/python-config
-  ln -s idle3               "$pkgdir"/usr/bin/idle
-  ln -s pydoc3              "$pkgdir"/usr/bin/pydoc
-  ln -s python$_pybasever.1 "$pkgdir"/usr/share/man/man1/python.1
-
   # some useful "stuff" FS#46146
   install -dm 755 "$pkgdir"/usr/lib/python$_pybasever/Tools/{i18n,scripts}
   install -m 755 Tools/i18n/{msgfmt,pygettext}.py "$pkgdir"/usr/lib/python$_pybasever/Tools/i18n/
   install -m 755 Tools/scripts/{README,*py} "$pkgdir"/usr/lib/python$_pybasever/Tools/scripts/
 
   # fix conflicts with python
-  mv "$pkgdir"/usr/bin/idle{,$_py_ver}
-  mv "$pkgdir"/usr/bin/pydoc{,$_py_ver}
-  mv "$pkgdir"/usr/bin/2to3{,-$_py_ver}
+  rm -f "$pkgdir"/usr/bin/pyvenv{,3}
+  rm -f "$pkgdir"/usr/bin/2to3{,3}
+  rm -f "$pkgdir"/usr/bin/idle{,3}
+  rm -f "$pkgdir"/usr/bin/pydoc{,3}
+  rm -f "$pkgdir"/usr/bin/python{,3}
+  rm -f "$pkgdir"/usr/bin/python{,3}-config
+  rm -f "$pkgdir"/usr/lib/libpython3.so
+  rm -f "$pkgdir"/usr/lib/pkgconfig/python3.pc
+  rm -f "$pkgdir"/usr/share/man/man1/python3.1
+
+  rm -f "$pkgdir"/usr/bin/pyenv
 
   # License
   install -Dm 644 LICENSE "$pkgdir"/usr/share/licenses/$pkgname/LICENSE
