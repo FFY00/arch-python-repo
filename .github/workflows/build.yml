@@ -6,20 +6,51 @@ on:
   pull_request:
     branches:
       - main
+  workflow_dispatch:
+    inputs:
+      packages:
+        description: Packages to build
+        type: string
+        required: false
 
 jobs:
+  generate-job-list:
+    runs-on: ubuntu-latest
+    outputs:
+      packages: ${{ steps.generate.outputs.packages }}
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@v2
+
+      - name: Generate job list
+        id: generate
+        run: |
+          if [ "$GITHUB_EVENT_NAME" = workflow_dispatch ]; then
+            packages="${INPUT_PACKAGES:=$(echo python*)}"
+          else
+            git fetch origin $SHA_BEFORE
+            packages="$(git diff --name-only $SHA_CURRENT $SHA_BEFORE -- python* | sed 's|/.*||')"
+          fi
+          echo "packages=$(jq -c -n '$ARGS.positional' --args $packages)" >> $GITHUB_OUTPUT
+          echo "Packages: ${packages:=(none)}"
+        env:
+          SHA_BEFORE: ${{ github.event.before }}
+          SHA_CURRENT: ${{ github.sha }}
+          INPUT_PACKAGES: ${{ inputs.packages }}
+
   build:
     runs-on: ubuntu-latest
+    needs: generate-job-list
+    if: ${{ needs.generate-job-list.outputs.packages != '[]' }}
     container:
       image: archlinux
       options: --privileged
       volumes:
-        - /sys/fs/cgroup:/sys/fs/cgroup
+        - ${{ github.workspace }}:${{ github.workspace }}
     strategy:
       fail-fast: false
       matrix:
-        python: [35, 36, 37, 38, 39, 310]
-      max-parallel: 1
+        package: ${{ fromJson(needs.generate-job-list.outputs.packages) }}
     steps:
       - name: Get date
         id: date
@@ -41,69 +72,95 @@ jobs:
 
       - name: Checkout main
         uses: actions/checkout@v2
+
+      - run: echo ${{ github.workspace }}
+      - run: echo $GITHUB_WORKSPACE
+      - run: pwd
+      - run: ls
+
+      - run: pacman -Syu base-devel devtools
+
+      - name: Build package
+        run: pkgctl build ${{ matrix.package }}/PKGBUILD
+
+#      - name: Build package
+#        uses: FFY00/build-arch-package@v1
+#        with:
+#          PKGBUILD: ${{ github.workspace }}/${{ matrix.package }}/PKGBUILD
+
+      - name: Upload built package
+        uses: actions/upload-artifact@v4
         with:
-          path: main
+          name: package-${{ matrix.package }}
+          path: arch-packages/*.pkg.tar.zst
 
-      - name: Check for source changes
-        id: check
-        env:
-          PREVIOUS: ${{ github.event.before }}
-          CURRENT: ${{ github.sha }}
-          PY_VER: ${{ matrix.python }}
-        run: |
-          cd "$GITHUB_WORKSPACE"/main
-          git fetch origin $PREVIOUS
-          git diff --name-only $PREVIOUS $CURRENT | grep -q python$PY_VER && echo '::set-output name=run::true' || true
+      - name: Upload logs
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: logs-${{ matrix.package }}
+          path: arch-packages/*.log
 
-      - name: Checkout repo
-        if: steps.check.outputs.run == 'true'
-        run: git clone --branch gh-pages https://github.com/${{ github.repository }}.git repo
+  update-repo:
+    runs-on: ubuntu-latest
+    container:
+      image: alpine
+    needs:
+      - generate-job-list
+      - build
+    steps:
+      - name: Install dependencies
+        run: apk add git pacman
+
+      - name: Checkout main
+        uses: actions/checkout@v2
+        with:
+          path: build
+
+      - name: Checkout repo branch
+        uses: actions/checkout@v2
+        with:
+          ref: gh-pages
+          path: repo
 
       - name: Setup git
-        if: steps.check.outputs.run == 'true'
         run: |
           git config --global user.email actions@github.com
           git config --global user.name 'Github Actions'
           git config --global core.editor true
 
-      - name: Remove existing packages
-        if: steps.check.outputs.run == 'true'
+      - name: Remove outdated packages
         env:
-          PY_VER: ${{ matrix.python }}
+          PACKAGES: ${{ needs.generate-job-list.outputs.packages }}
         run: |
-          rm -f "$GITHUB_WORKSPACE"/repo/python$PY_VER*.pkg.*
+          for pkg in $(echo $PACKAGES | jq -r .[]); do
+            rm repo/$pkg-*
+          done
 
-      - name: Build Arch Linux package
-        if: steps.check.outputs.run == 'true'
-        uses: FFY00/build-arch-package@v1
+      - name: Download built packages
+        uses: actions/download-artifact@v4
         with:
-          PKGBUILD: main/python$PY_VER/PKGBUILD
+          download: package
+          path: repo
+          merge-multiple: true
 
       - name: Generate repo database
-        if: steps.check.outputs.run == 'true'
-        env:
-          PY_VER: ${{ matrix.python }}
         run: |
-          cd "$GITHUB_WORKSPACE"/repo
-          repo-add python.db.tar.gz "$HOME"/arch-packages/python$PY_VER*.pkg.*
-          rm -f *.old
+          repo-add --prevent-downgrade repo/python.db.tar.gz "$HOME"/arch-packages/*.pkg.*
+          rm -f repo/*.old
 
       - name: Generate index.html for repo
-        if: steps.check.outputs.run == 'true'
-        run: |
-          "$GITHUB_WORKSPACE"/main/generate-index.sh "$GITHUB_WORKSPACE"/repo
+        run: build/generate-index.sh repo
 
       - name: Commit packages
-        if: steps.check.outputs.run == 'true'
         run: |
-          cd "$GITHUB_WORKSPACE"/repo
+          cd repo
           git add -u
           git add *
           git commit --fixup HEAD || true
           git rebase -i --autosquash --root
 
       - name: Push changes
-        if: steps.check.outputs.run == 'true'
         uses: ad-m/github-push-action@master
         with:
           github_token: ${{ secrets.ACCESS_TOKEN }}
