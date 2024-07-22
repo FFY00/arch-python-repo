@@ -35,15 +35,18 @@ Server = https://pkgbuild.com/~ffy00/python-repo/
 
 ### Version table (w/ distribution per repository)
 
-| Version |      State      | End of Life  |          Repo          |  Package   |
-|:-------:|:---------------:| ------------ | ---------------------- | ----------:|
-| 2.7     | **End of life** | *2020-01-01* | [`extra`] (Arch Linux) | `python2`  |
-| 3.5     | **End of life** | *2020-09-13* | [`python`] (this)      | `python35` |
-| 3.6     | **End of life** | *2021-12-23* | [`python`] (this)      | `python36` |
-| 3.7     | Security        | 2023-06-27   | [`python`] (this)      | `python37` |
-| 3.8     | Security        | 2024-10      | [`python`] (this)      | `python38` |
-| 3.9     | Bugfix          | 2025-10      | [`python`] (this)      | `python39` |
-| 3.10    | Bugfix          | 2026-10      | [`extra`] (Arch Linux) | `python`   |
+| Version |      State      | End of Life  |          Repo          |  Package    |
+|:-------:|:---------------:| ------------ | ---------------------- | -----------:|
+| 2.7     | **End of life** | *2020-01-01* | [`extra`] (Arch Linux) | `python2`   |
+| 3.4     | **End of life** | *2012-10-17* | [`python`] (this)      | `python34`  |
+| 3.5     | **End of life** | *2014-09-22* | [`python`] (this)      | `python35`  |
+| 3.6     | **End of life** | *2021-12-23* | [`python`] (this)      | `python36`  |
+| 3.7     | **End of life** | *2023-06-27* | [`python`] (this)      | `python37`  |
+| 3.8     | Security        | 2024-10      | [`python`] (this)      | `python38`  |
+| 3.9     | Security        | 2025-10      | [`python`] (this)      | `python39`  |
+| 3.10    | Security        | 2026-10      | [`python`] (this)      | `python310` |
+| 3.11    | Security        | 2027-10      | [`python`] (this)      | `python311` |
+| 3.12    | Bugfix          | 2028-10      | [`extra`] (Arch Linux) | `python`    |
 
 [#13]: https://github.com/FFY00/arch-python-repo/issues/13
 [`extra`]: https://www.archlinux.org/packages/?repo=Extra
