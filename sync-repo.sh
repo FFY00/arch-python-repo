@@ -15,6 +15,16 @@ sync() {
 msg 'Syncing local repo with remote...'
 sync homedir:public_html/python-repo/ repo/
 
+msg 'Deleting old packages...'
+for package in python*; do
+  for pkg in repo/$package-*.*.pkg.tar.zst; do
+    if [ -f $pkg ]; then
+      rm -rf pkg{,.sig}
+      echo "Removed $pkg"
+    fi
+  done
+done
+
 msg 'Copying packages to repo...'
 sync */*.pkg.tar.zst repo/
 
@@ -27,7 +37,6 @@ done
 msg 'Updating repo...'
 repo-add \
   --new \
-  --remove \
   --prevent-downgrade \
   --include-sigs \
   --sign \
