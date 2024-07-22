@@ -8,11 +8,12 @@
 _py_ver=310
 pkgname=python$_py_ver
 pkgver=3.10.14
-pkgrel=1
+pkgrel=2
 _pybasever=${pkgver%.*}
 pkgdesc='Next generation of the python high-level scripting language'
 arch=('x86_64')
 license=('custom')
+groups=('python-versions')
 url='https://www.python.org/'
 depends=('expat' 'bzip2' 'gdbm' 'openssl' 'libffi' 'zlib' 'libnsl')
 makedepends=('tk' 'sqlite' 'valgrind' 'bluez-libs' 'mpdecimal' 'llvm' 'gdb' 'xorg-server-xvfb')
