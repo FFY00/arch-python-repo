@@ -20,7 +20,7 @@ jobs:
       packages: ${{ steps.generate.outputs.packages }}
     steps:
       - name: Checkout main
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
 
       - name: Generate job list
         id: generate
@@ -71,7 +71,7 @@ jobs:
           restore-keys: archbuild
 
       - name: Checkout main
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
 
       - run: echo ${{ github.workspace }}
       - run: echo $GITHUB_WORKSPACE
@@ -113,12 +113,12 @@ jobs:
         run: apk add git pacman
 
       - name: Checkout main
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
         with:
           path: build
 
       - name: Checkout repo branch
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
         with:
           ref: gh-pages
           path: repo
