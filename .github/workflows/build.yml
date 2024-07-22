@@ -134,7 +134,7 @@ jobs:
           PACKAGES: ${{ needs.generate-job-list.outputs.packages }}
         run: |
           for pkg in $(echo $PACKAGES | jq -r .[]); do
-            rm repo/$pkg-*
+            rm -f repo/$pkg-*
           done
 
       - name: Download built packages
