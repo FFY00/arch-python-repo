@@ -18,6 +18,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       packages: ${{ steps.generate.outputs.packages }}
+      date: ${{ steps.generate.outputs.date }}
     steps:
       - name: Checkout main
         uses: actions/checkout@v4
@@ -38,6 +39,10 @@ jobs:
           SHA_CURRENT: ${{ github.sha }}
           INPUT_PACKAGES: ${{ inputs.packages }}
 
+      - name: Get date
+        id: date
+        run: echo "date=$(date +%F)" >> $GITHUB_OUTPUT
+
   build:
     runs-on: ubuntu-latest
     needs: generate-job-list
@@ -52,22 +57,18 @@ jobs:
       matrix:
         package: ${{ fromJson(needs.generate-job-list.outputs.packages) }}
     steps:
-      - name: Get date
-        id: date
-        run: echo "date=$(date +%F)" >> $GITHUB_OUTPUT
-
       - name: Cache pacman packages
         uses: actions/cache@v1
         with:
           path: /var/cache/pacman/pkg
-          key: arch-pkgs-${{ steps.date.outputs.date }}
+          key: arch-pkgs-${{ needs.generate-job-list.outputs.date }}
           restore-keys: arch-pkgs
 
       - name: Cache archbuild
         uses: actions/cache@v1
         with:
           path: /var/lib/archbuild
-          key: archbuild-${{ steps.date.outputs.date }}
+          key: archbuild-${{ needs.generate-job-list.outputs.date }}
           restore-keys: archbuild
 
       - name: Checkout main
